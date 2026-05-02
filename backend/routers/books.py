@@ -7,6 +7,7 @@ from backend.models import User, Book
 from backend.schemas import BookOut
 from backend.utils import decode_access_token
 from fastapi.security import OAuth2PasswordBearer
+from backend.ai_engine import index_pdf
 
 router = APIRouter()
 
@@ -69,7 +70,8 @@ def upload_book(
     1. Check user is admin
     2. Save PDF file to /books/ folder
     3. Save book info to database
-    4. Return book info
+    4. Index PDF into ChromaDB for RAG
+    5. Return book info
     """
 
     # Step 1 — only admin can upload
@@ -101,7 +103,10 @@ def upload_book(
     db.commit()
     db.refresh(new_book)
 
-    # Step 4 — return book info
+    # Step 4 — Index PDF into ChromaDB for RAG
+    index_pdf(file_path, new_book.id)
+
+    # Step 5 — return book info
     return new_book
 
 

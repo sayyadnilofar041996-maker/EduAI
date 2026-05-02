@@ -5,6 +5,10 @@ venv/
 # Environment variables (never push to GitHub)
 .env
 
+# ChromaDB vector store
+vectorstore/
+
+
 # Python cache
 __pycache__/
 *.pyc

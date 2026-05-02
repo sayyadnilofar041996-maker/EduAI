@@ -5,7 +5,7 @@ from backend.database import get_db
 from backend.models import User, Book, ChatHistory, StudentProgress
 from backend.schemas import ChatRequest, ChatResponse, ChatHistoryOut
 from backend.routers.books import get_current_user
-from backend.ai_engine import extract_pdf_text, detect_doubt, ask_gemini
+from backend.ai_engine import get_ai_response, detect_doubt
 
 router = APIRouter()
 
@@ -23,19 +23,18 @@ def ask_question(
     Student asks a question.
     Steps:
     1. Find the right book by subject + grade
-    2. Extract PDF text
-    3. Detect doubt
-    4. Ask Gemini
-    5. Save to chat_history
-    6. Update student_progress
-    7. Return answer
+    2. Detect doubt
+    3. Get AI response using RAG
+    4. Save to chat_history
+    5. Update student_progress
+    6. Return answer
     """
 
     # Step 1 — find book by subject and student's grade
     book = db.query(Book).filter(
-        Book.subject == request.subject,
-        Book.grade   == current_user.grade
-    ).first()
+    Book.subject.ilike(request.subject),
+    Book.grade   == current_user.grade
+).first()
 
     if not book:
         raise HTTPException(
@@ -43,10 +42,7 @@ def ask_question(
             detail=f"No book found for subject '{request.subject}' in grade {current_user.grade}"
         )
 
-    # Step 2 — extract PDF text
-    pdf_text = extract_pdf_text(book.file_path)
-
-    # Step 3 — detect doubt + decide explanation style
+    # Step 2 — detect doubt + decide explanation style
     doubt_found = detect_doubt(request.question)
     if doubt_found:
         # Rotate through explanation styles
@@ -64,17 +60,19 @@ def ask_question(
     else:
         explanation_style = "normal"
 
-    # Step 4 — ask Gemini
-    ai_answer = ask_gemini(
+    # Step 3 — get AI response using RAG
+    result = get_ai_response(
         question          = request.question,
-        pdf_text          = pdf_text,
+        book_id           = book.id,
         grade             = current_user.grade,
         language          = request.language,
-        doubt_detected    = doubt_found,
         explanation_style = explanation_style
     )
 
-    # Step 5 — save to chat_history
+    ai_answer   = result["answer"]
+    doubt_found = result["doubt_detected"]
+
+    # Step 4 — save to chat_history
     chat_record = ChatHistory(
         user_id           = current_user.id,
         book_id           = book.id,
@@ -88,7 +86,7 @@ def ask_question(
     db.add(chat_record)
     db.commit()
 
-    # Step 6 — update student progress
+    # Step 5 — update student progress
     progress = db.query(StudentProgress).filter(
         StudentProgress.user_id == current_user.id,
         StudentProgress.subject == request.subject
@@ -119,7 +117,7 @@ def ask_question(
         db.add(new_progress)
         db.commit()
 
-    # Step 7 — return answer
+    # Step 6 — return answer
     return ChatResponse(
         ai_answer         = ai_answer,
         doubt_detected    = doubt_found,

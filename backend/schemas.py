@@ -40,6 +40,9 @@ class TokenOut(BaseModel):
     """What the API sends back after successful login."""
     access_token: str
     token_type:   str = "bearer"
+    role:         str
+    grade:        Optional[int] = None
+    name:         str
 
 
 # ─────────────────────────────────────────────

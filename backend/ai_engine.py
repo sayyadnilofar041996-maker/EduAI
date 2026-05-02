@@ -1,136 +1,216 @@
-from groq import Groq
-import fitz  # PyMuPDF
 import os
-from pathlib import Path
-from dotenv import load_dotenv
+import fitz  # PyMuPDF
+from groq import Groq
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_community.vectorstores import Chroma
+from langchain_community.embeddings import SentenceTransformerEmbeddings
 
-load_dotenv(dotenv_path=Path(__file__).resolve().parent.parent / ".env")
+# ============================================================
+# SETUP
+# ============================================================
 
-# Configure Groq client
-client = Groq(api_key=os.getenv("GROQ_API_KEY"))
-MODEL = "llama-3.3-70b-versatile"  # free, fast, very capable
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+client = Groq(api_key=GROQ_API_KEY)
+
+VECTORSTORE_DIR = "vectorstore"
+
+# Embedding model — converts text to vectors
+embeddings = SentenceTransformerEmbeddings(
+    model_name="all-MiniLM-L6-v2"
+)
+
+# ============================================================
+# STEP 1 — INDEX PDF (called when admin uploads a book)
+# ============================================================
+
+def index_pdf(pdf_path: str, book_id: int):
+    """
+    Reads PDF, splits into chunks, stores in ChromaDB.
+    Called once when admin uploads a PDF.
+    """
+
+    # 1. Extract full text from PDF using PyMuPDF
+    doc = fitz.open(pdf_path)
+    full_text = ""
+    for page in doc:
+        full_text += page.get_text()
+    doc.close()
+
+    # 2. Split text into small chunks
+    splitter = RecursiveCharacterTextSplitter(
+        chunk_size=500,
+        chunk_overlap=50
+    )
+    chunks = splitter.split_text(full_text)
+
+    # 3. Store chunks in ChromaDB
+    collection_name = f"book_{book_id}"
+    vectorstore = Chroma.from_texts(
+        texts=chunks,
+        embedding=embeddings,
+        collection_name=collection_name,
+        persist_directory=VECTORSTORE_DIR
+    )
+    vectorstore.persist()
+
+    print(f"✅ Indexed {len(chunks)} chunks for book {book_id}")
 
 
-# ─────────────────────────────────────────────
-# EXTRACT TEXT FROM PDF
-# ─────────────────────────────────────────────
-def extract_pdf_text(file_path: str, max_pages: int = 10) -> str:
-    try:
-        doc = fitz.open(file_path)
-        text = ""
-        for i, page in enumerate(doc):
-            if i >= max_pages:
-                break
-            text += page.get_text()
-        doc.close()
-        return text.strip()
-    except Exception as e:
-        return f"Could not read PDF: {str(e)}"
+# ============================================================
+# STEP 2 — RETRIEVE RELEVANT CHUNKS (called when student asks)
+# ============================================================
+
+def get_relevant_chunks(question: str, book_id: int) -> str:
+    """
+    Searches ChromaDB for chunks most relevant to the question.
+    Returns them as a single string.
+    """
+
+    collection_name = f"book_{book_id}"
+
+    vectorstore = Chroma(
+        collection_name=collection_name,
+        embedding_function=embeddings,
+        persist_directory=VECTORSTORE_DIR
+    )
+
+    # Find top 4 most relevant chunks
+    results = vectorstore.similarity_search(question, k=4)
+
+    # Join all chunks into one string
+    context = "\n\n".join([doc.page_content for doc in results])
+
+    return context
 
 
-# ─────────────────────────────────────────────
-# DETECT DOUBT IN STUDENT MESSAGE
-# ─────────────────────────────────────────────
+# ============================================================
+# STEP 3 — DETECT DOUBT
+# ============================================================
+
 def detect_doubt(question: str) -> bool:
+    """
+    Returns True if student is confused.
+    """
     doubt_phrases = [
         "didn't understand", "did not understand",
-        "samajh nahi aaya", "samajh nahi aya",
-        "not clear", "confusing", "confused",
-        "explain again", "samjhao", "dobara batao",
-        "समझ नहीं आया", "फिर से बताओ",
-        "समजले नाही", "परत सांग"
+        "not understand", "confused", "samajh nahi aaya",
+        "samajh nahi aya", "nahi samjha", "समझ नहीं",
+        "don't understand", "explain again",
+        "what do you mean", "not clear"
     ]
     question_lower = question.lower()
     return any(phrase in question_lower for phrase in doubt_phrases)
 
 
-# ─────────────────────────────────────────────
-# BUILD SYSTEM PROMPT
-# ─────────────────────────────────────────────
-def build_system_prompt(
-    grade: int,
-    language: str,
-    doubt_detected: bool,
-    explanation_style: str
-) -> str:
+# ============================================================
+# STEP 4 — BUILD SYSTEM PROMPT
+# ============================================================
 
+def build_system_prompt(grade: int, language: str,
+                         doubt: bool, style: str) -> str:
+    """
+    Builds dynamic system prompt based on student profile.
+    """
+
+    # Grade based tone
     if grade <= 3:
-        tone = "Use very simple words, short sentences, and fun examples like toys or animals. Be very encouraging and friendly like a kind parent."
+        tone = "Use very simple words. Short sentences. Like talking to a 6 year old. Use emojis."
     elif grade <= 6:
-        tone = "Use simple but complete explanations. Use relatable examples from daily life. Be friendly and encouraging like a supportive teacher."
-    elif grade <= 8:
-        tone = "Use clear explanations with proper terms. Include examples and analogies. Be like a knowledgeable but approachable teacher."
+        tone = "Use simple language. Give real life examples. Be friendly and encouraging."
     else:
-        tone = "Use detailed, thorough explanations with proper academic language. Include examples, and connect concepts. Be like a subject expert teacher."
+        tone = "Use proper academic language. Give detailed explanations. Include formulas if needed."
 
+    # Language
     if language == "hindi":
-        lang_instruction = "Respond completely in Hindi language using Devanagari script."
+        lang_instruction = "Respond in Hindi language."
     elif language == "marathi":
-        lang_instruction = "Respond completely in Marathi language using Devanagari script."
+        lang_instruction = "Respond in Marathi language."
     else:
-        lang_instruction = "Respond in clear English."
+        lang_instruction = "Respond in English language."
 
-    if doubt_detected:
-        if explanation_style == "story":
-            style_instruction = "The student did not understand. Explain using a short interesting story that makes the concept clear."
-        elif explanation_style == "example":
-            style_instruction = "The student did not understand. Use a very simple real-life example. Start from scratch."
-        else:
-            style_instruction = "The student did not understand. Use an analogy or comparison to something familiar."
+    # Doubt style
+    if doubt:
+        style_instruction = """
+The student did not understand the previous explanation.
+Change your explanation style COMPLETELY.
+Use a story, a real life example, or a simple analogy.
+Break it into very small steps.
+Ask the student questions to check understanding.
+"""
     else:
-        style_instruction = "Teach step by step. After explaining, ask the student one simple question to check understanding."
+        style_instruction = """
+Teach step by step.
+After explaining, give a small exercise or question.
+Encourage the student.
+"""
 
-    return f"""You are EduAI — a friendly AI teacher for grade {grade} students.
-    
-{tone}
+    prompt = f"""
+You are EduAI — a friendly AI teacher for school students.
+You are teaching a Grade {grade} student.
+
 {lang_instruction}
+{tone}
 {style_instruction}
 
-Always follow this structure:
-1. Explain the concept clearly
-2. Give a real example
-3. If appropriate, describe a simple diagram in text
-4. Ask one follow-up question to check understanding
-5. Suggest one practice exercise"""
+Use ONLY the textbook content provided to you.
+Do not add information from outside the textbook.
+If the answer is not in the textbook content, say:
+"This topic is not covered in your current textbook."
+"""
+
+    return prompt
 
 
-# ─────────────────────────────────────────────
-# MAIN FUNCTION — Ask Groq
-# ─────────────────────────────────────────────
-def ask_gemini(
+# ============================================================
+# STEP 5 — MAIN AI FUNCTION (called from chat.py)
+# ============================================================
+
+def get_ai_response(
     question: str,
-    pdf_text: str,
+    book_id: int,
     grade: int,
-    language: str,
-    doubt_detected: bool,
-    explanation_style: str
-) -> str:
-    """We keep the function name ask_gemini so chat.py doesn't need changes."""
+    language: str = "english",
+    explanation_style: str = "normal"
+) -> dict:
+    """
+    Main function called by chat.py
+    Returns AI answer + doubt status + style used
+    """
 
-    system_prompt = build_system_prompt(
-        grade, language, doubt_detected, explanation_style
+    # Detect if student is confused
+    doubt = detect_doubt(question)
+    style = "story" if doubt else explanation_style
+
+    # Get relevant chunks from ChromaDB
+    context = get_relevant_chunks(question, book_id)
+
+    # Build system prompt
+    system_prompt = build_system_prompt(grade, language, doubt, style)
+
+    # Build final message to Groq
+    user_message = f"""
+Textbook Content:
+{context}
+
+Student Question:
+{question}
+"""
+
+    # Call Groq API
+    response = client.chat.completions.create(
+        model="llama-3.3-70b-versatile",
+        messages=[
+            {"role": "system", "content": system_prompt},
+            {"role": "user",   "content": user_message}
+        ],
+        max_tokens=1024
     )
 
-    pdf_context = pdf_text[:3000] if len(pdf_text) > 3000 else pdf_text
+    answer = response.choices[0].message.content
 
-    user_message = f"""--- TEXTBOOK CONTENT ---
-{pdf_context}
---- END OF TEXTBOOK ---
-
-Student's question: {question}
-
-Answer the student's question based on the textbook content above."""
-
-    try:
-        response = client.chat.completions.create(
-            model=MODEL,
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user",   "content": user_message}
-            ],
-            temperature=0.7,
-            max_tokens=1024
-        )
-        return response.choices[0].message.content
-    except Exception as e:
-        return f"AI could not respond at this time: {str(e)}"
+    return {
+        "answer": answer,
+        "doubt_detected": doubt,
+        "explanation_style": style,
+        "chunks_used": len(context)
+    }
