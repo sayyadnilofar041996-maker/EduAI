@@ -1,0 +1,124 @@
+/* ===== RESET & BASE ===== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ===== CARD CONTAINER ===== */
+.container {
+  background: white;
+  border-radius: 16px;
+  padding: 40px;
+  width: 100%;
+  max-width: 440px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+}
+
+/* ===== HEADER ===== */
+.header {
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.header h1 {
+  font-size: 2rem;
+  color: #5a3ec8;
+}
+
+.header p {
+  color: #888;
+  font-size: 0.95rem;
+  margin-top: 6px;
+}
+
+/* ===== TABS ===== */
+.tabs {
+  display: flex;
+  margin-bottom: 24px;
+  border-bottom: 2px solid #eee;
+}
+
+.tab-btn {
+  flex: 1;
+  padding: 12px;
+  border: none;
+  background: none;
+  font-size: 1rem;
+  cursor: pointer;
+  color: #888;
+  transition: all 0.2s;
+}
+
+.tab-btn.active {
+  color: #5a3ec8;
+  border-bottom: 3px solid #5a3ec8;
+  font-weight: 600;
+}
+
+/* ===== FORM ===== */
+.form-box label {
+  display: block;
+  margin: 14px 0 6px;
+  font-size: 0.88rem;
+  color: #555;
+  font-weight: 600;
+}
+
+.form-box input,
+.form-box select {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1.5px solid #ddd;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  transition: border 0.2s;
+  outline: none;
+}
+
+.form-box input:focus,
+.form-box select:focus {
+  border-color: #5a3ec8;
+}
+
+/* ===== BUTTON ===== */
+.btn-primary {
+  width: 100%;
+  padding: 14px;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 22px;
+  transition: opacity 0.2s;
+}
+
+.btn-primary:hover {
+  opacity: 0.9;
+}
+
+/* ===== MESSAGE ===== */
+.msg {
+  margin-top: 14px;
+  text-align: center;
+  font-size: 0.9rem;
+  min-height: 20px;
+}
+
+.msg.success { color: #22c55e; }
+.msg.error   { color: #ef4444; }
+
+/* ===== UTILITY ===== */
+.hidden { display: none; }

@@ -89,4 +89,10 @@ def login(user_data: UserLogin, db: Session = Depends(get_db)):
     token = create_access_token(data=token_data)
 
     # Step 4 — return token
-    return {"access_token": token, "token_type": "bearer"}
+    return {
+    "access_token": token,
+    "token_type": "bearer",
+    "role": user.role,
+    "grade": user.grade,
+    "name": user.name
+}

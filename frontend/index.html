@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>EduAI — Smart Learning</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <div class="container">
+
+    <!-- HEADER -->
+    <div class="header">
+      <h1>🎓 EduAI</h1>
+      <p>Your AI-Powered Teacher — Grades 1 to 10</p>
+    </div>
+
+    <!-- TAB BUTTONS -->
+    <div class="tabs">
+      <button class="tab-btn active" onclick="showTab('login')">Login</button>
+      <button class="tab-btn" onclick="showTab('register')">Register</button>
+    </div>
+
+    <!-- LOGIN FORM -->
+    <div id="login-tab" class="form-box">
+      <h2>Welcome Back 👋</h2>
+
+      <label>Email</label>
+      <input type="email" id="login-email" placeholder="your@email.com" />
+
+      <label>Password</label>
+      <input type="password" id="login-password" placeholder="••••••••" />
+
+      <button class="btn-primary" onclick="loginUser()">Login</button>
+
+      <p id="login-msg" class="msg"></p>
+    </div>
+
+    <!-- REGISTER FORM -->
+    <div id="register-tab" class="form-box hidden">
+      <h2>Create Account 📚</h2>
+
+      <label>Full Name</label>
+      <input type="text" id="reg-name" placeholder="Nilofar Sayyad" />
+
+      <label>Email</label>
+      <input type="email" id="reg-email" placeholder="your@email.com" />
+
+      <label>Password</label>
+      <input type="password" id="reg-password" placeholder="••••••••" />
+
+      <label>Grade (1–10) — leave blank if you are a Teacher/Admin</label>
+      <input type="number" id="reg-grade" placeholder="e.g. 5" min="1" max="10" />
+
+      <label>Role</label>
+      <select id="reg-role">
+        <option value="student">Student</option>
+        <option value="admin">Teacher / Admin</option>
+      </select>
+
+      <label>Preferred Language</label>
+      <select id="reg-lang">
+        <option value="english">English</option>
+        <option value="hindi">Hindi</option>
+        <option value="marathi">Marathi</option>
+      </select>
+
+      <button class="btn-primary" onclick="registerUser()">Register</button>
+
+      <p id="reg-msg" class="msg"></p>
+    </div>
+
+  </div>
+
+  <script src="js/auth.js"></script>
+</body>
+</html>
