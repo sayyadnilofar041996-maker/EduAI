@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>EduAI — Dashboard</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <!-- TOP NAVIGATION BAR -->
+  <nav class="navbar">
+    <div class="nav-brand">🎓 EduAI</div>
+    <div class="nav-user">
+      <span id="user-greeting">Welcome!</span>
+      <button class="btn-logout" onclick="logout()">Logout</button>
+    </div>
+  </nav>
+
+  <!-- MAIN CONTENT -->
+  <div class="dashboard-container">
+
+    <!-- PAGE TITLE -->
+    <div class="page-title">
+      <h2>📚 Your Books</h2>
+      <p id="grade-label">Loading...</p>
+    </div>
+
+    <!-- BOOKS GRID -->
+    <div id="books-grid" class="books-grid">
+      <!-- Books will be added here by JavaScript -->
+    </div>
+
+    <!-- EMPTY STATE -->
+    <div id="empty-state" class="empty-state hidden">
+      <p>😔 No books found for your grade.</p>
+      <p>Please ask your teacher to upload books.</p>
+    </div>
+
+    <!-- LOADING STATE -->
+    <div id="loading-state" class="loading-state">
+      <p>Loading your books...</p>
+    </div>
+
+  </div>
+
+  <script src="js/dashboard.js"></script>
+</body>
+</html>

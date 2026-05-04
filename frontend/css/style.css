@@ -7,8 +7,13 @@
 
 body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #f5f6fa;
   min-height: 100vh;
+}
+
+/* Login page only */
+body.login-page {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -122,3 +127,177 @@ body {
 
 /* ===== UTILITY ===== */
 .hidden { display: none; }
+
+/* ===== NAVBAR IMPROVED ===== */
+.navbar {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  padding: 16px 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 4px 15px rgba(102,126,234,0.4);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.nav-brand {
+  color: white;
+  font-size: 1.4rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.nav-user {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.nav-user span {
+  color: rgba(255,255,255,0.9);
+  font-size: 0.95rem;
+}
+
+.btn-logout {
+  padding: 8px 20px;
+  background: rgba(255,255,255,0.15);
+  color: white;
+  border: 1.5px solid rgba(255,255,255,0.5);
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+
+.btn-logout:hover {
+  background: rgba(255,255,255,0.3);
+  transform: scale(1.05);
+}
+
+/* ===== DASHBOARD CONTAINER ===== */
+.dashboard-container {
+  max-width: 1100px;
+  margin: 40px auto;
+  padding: 0 32px;
+}
+
+/* ===== PAGE TITLE ===== */
+.page-title {
+  margin-bottom: 36px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid #ede9ff;
+}
+
+.page-title h2 {
+  font-size: 2rem;
+  color: #5a3ec8;
+  font-weight: 700;
+}
+
+.page-title p {
+  color: #999;
+  margin-top: 6px;
+  font-size: 1rem;
+}
+
+/* ===== BOOKS GRID ===== */
+.books-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 28px;
+}
+
+/* ===== BOOK CARD ===== */
+.book-card {
+  background: white;
+  border-radius: 16px;
+  padding: 32px 24px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.07);
+  cursor: pointer;
+  transition: all 0.25s ease;
+  text-align: center;
+  border: 2px solid transparent;
+  position: relative;
+  overflow: hidden;
+}
+
+.book-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  transform: scaleX(0);
+  transition: transform 0.25s ease;
+}
+
+.book-card:hover::before {
+  transform: scaleX(1);
+}
+
+.book-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 35px rgba(90,62,200,0.18);
+  border-color: #ede9ff;
+}
+
+.book-card .book-icon {
+  font-size: 3rem;
+  margin-bottom: 16px;
+  display: block;
+}
+
+.book-card .book-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #2d2d2d;
+  margin-bottom: 10px;
+  line-height: 1.4;
+}
+
+.book-card .book-subject {
+  font-size: 0.82rem;
+  color: #5a3ec8;
+  background: #f0ecff;
+  padding: 5px 14px;
+  border-radius: 20px;
+  display: inline-block;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.book-card .book-arrow {
+  margin-top: 16px;
+  color: #bbb;
+  font-size: 0.85rem;
+  transition: color 0.2s;
+}
+
+.book-card:hover .book-arrow {
+  color: #5a3ec8;
+}
+
+/* ===== EMPTY STATE ===== */
+.empty-state {
+  text-align: center;
+  padding: 80px 20px;
+  color: #aaa;
+  font-size: 1rem;
+  line-height: 2.2;
+}
+
+.empty-state p:first-child {
+  font-size: 3rem;
+  margin-bottom: 8px;
+}
+
+/* ===== LOADING STATE ===== */
+.loading-state {
+  text-align: center;
+  padding: 80px 20px;
+  color: #aaa;
+  font-size: 1rem;
+}
