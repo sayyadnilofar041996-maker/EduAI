@@ -1,3 +1,77 @@
+# EduAI — AI Teacher Web Application
+
+
+An AI-powered education platform for students from Grade 1 to Grade 10.
+Students learn directly from their textbooks — the AI teaches, explains, and adapts based on grade level and understanding.
+
+---
+
+## ✨ Features
+
+- 📚 Admin uploads PDF textbooks assigned to specific grade and subject
+- 🎓 Students log in and see only their grade's books and subjects
+- 🤖 AI answers questions using RAG — responses come from actual textbook content
+- 🧠 Doubt detection — AI changes explanation style when student is confused
+- 🌐 Multilingual support — English, Hindi, Marathi
+- 📊 Student progress tracking — scores, weak areas, revision suggestions
+- 🗂️ Chapter sidebar with accordion, subtopics, and Resume badge
+- 🔐 JWT-based authentication for students and admin
+
+---
+
+## 🛠️ Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Backend | FastAPI (Python 3.11) |
+| Database | SQLite + SQLAlchemy |
+| Authentication | JWT tokens + Passlib |
+| PDF Reading | PyMuPDF (pymupdf) |
+| AI Model | Groq API — llama-3.3-70b-versatile |
+| RAG Pipeline | LangChain + ChromaDB + SentenceTransformers |
+| Frontend | Plain HTML + CSS + JavaScript |
+| Environment | python-dotenv |
+| File Uploads | python-multipart |
+
+---
+
+## 📁 Project Structure
+
+    EduAI/
+    ├── backend/
+    │   ├── main.py               # FastAPI app entry point
+    │   ├── database.py           # SQLAlchemy engine + session
+    │   ├── models.py             # Database table models
+    │   ├── schemas.py            # Pydantic request/response schemas
+    │   ├── ai_engine.py          # RAG pipeline + Groq AI logic
+    │   ├── utils.py              # Helper functions
+    │   └── routers/
+    │       ├── __init__.py
+    │       ├── auth.py           # Register + Login
+    │       ├── books.py          # Upload + fetch books + chapters
+    │       ├── chat.py           # AI chat + history
+    │       ├── admin.py          # Admin panel endpoints
+    │       └── progress.py       # Student progress endpoints
+    ├── books/                    # Uploaded PDF storage
+    ├── vectorstore/              # ChromaDB vector index
+    ├── frontend/
+    │   ├── index.html
+    │   ├── dashboard.html
+    │   ├── chat.html
+    │   ├── admin.html
+    │   ├── progress.html
+    │   ├── css/
+    │   │   └── style.css
+    │   └── js/
+    │       ├── auth.js
+    │       ├── dashboard.js
+    │       ├── chat.js
+    │       ├── admin.js
+    │       └── progress.js
+    ├── .env
+    ├── .gitignore
+    └── README.md
+
 ---
 
 ## 🗄️ Database Tables
@@ -81,6 +155,20 @@
 7. **Open in browser**
 
        http://127.0.0.1:8000/frontend/
+
+---
+
+## 📸 Screenshots
+
+> Screenshots will be added soon.
+
+| Page | Screenshot |
+|---|---|
+| Login / Register | docs/screenshots/login.png |
+| Student Dashboard | docs/screenshots/dashboard.png |
+| AI Chat | docs/screenshots/chat.png |
+| Admin Panel | docs/screenshots/admin.png |
+| Progress Page | docs/screenshots/progress.png |
 
 ---
 
