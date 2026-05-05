@@ -51,39 +51,40 @@
 ## ⚙️ Setup Instructions
 
 1. **Clone the repository**
-```bash
-   git clone https://github.com/sayyadnilofar041996-maker/EduAI.git
-   cd EduAI
-```
+
+       git clone https://github.com/sayyadnilofar041996-maker/EduAI.git
+       cd EduAI
 
 2. **Create virtual environment**
-```bash
-   py -3.11 -m venv .venv
-```
+
+       py -3.11 -m venv .venv
 
 3. **Activate virtual environment**
-```bash
-   .venv\Scripts\activate
-```
+
+       .venv\Scripts\activate
 
 4. **Install dependencies**
-```bash
-   pip install -r requirements.txt
-```
+
+       pip install -r requirements.txt
 
 5. **Configure environment variables**
 
    Create a `.env` file in the root folder:
-```env
-   GROQ_API_KEY=your_groq_api_key_here
-   SECRET_KEY=your_jwt_secret_key_here
-```
+
+       GROQ_API_KEY=your_groq_api_key_here
+       SECRET_KEY=your_jwt_secret_key_here
 
 6. **Run the server**
-```bash
-   uvicorn backend.main:app --reload
-```
-🛣️ Roadmap
+
+       uvicorn backend.main:app --reload
+
+7. **Open in browser**
+
+       http://127.0.0.1:8000/frontend/
+
+---
+
+## 🛣️ Roadmap
 
 - [x] Phase 1 — Planning & folder structure
 - [x] Phase 2 — Full backend with RAG
@@ -97,5 +98,5 @@
 
 ## 👩‍💻 Developer
 
-**Nilofar Sayyad**  
+**Nilofar Sayyad**
 GitHub: [@sayyadnilofar041996-maker](https://github.com/sayyadnilofar041996-maker)
