@@ -4,7 +4,8 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.security import HTTPBearer
 from backend.database import engine, Base
 from backend.routers import auth, books, chat
-from backend.routers import admin              # ✅ NEW
+from backend.routers import admin    
+from backend.routers import progress          # ✅ NEW
 
 security = HTTPBearer()
 
@@ -39,7 +40,8 @@ app.add_middleware(
 app.include_router(auth.router,  prefix="/auth",  tags=["Auth"])
 app.include_router(books.router, prefix="/books", tags=["Books"])
 app.include_router(chat.router,  prefix="/chat",  tags=["Chat"])
-app.include_router(admin.router, prefix="/admin", tags=["Admin"])  # ✅ NEW
+app.include_router(admin.router, prefix="/admin", tags=["Admin"])
+app.include_router(progress.router, prefix="/progress", tags=["Progress"])  # ✅ NEW
 
 # ─────────────────────────────────────────────
 # Serve frontend files

@@ -14,7 +14,6 @@ const role  = localStorage.getItem("role");
 
 // ============================================================
 // CONCEPT 2 — Protect the page
-// If no token found, send back to login
 // ============================================================
 if (!token || token === "null" || token === "undefined") {
   window.location.href = "/frontend/index.html";
@@ -31,16 +30,16 @@ document.getElementById("grade-label").textContent = `Grade ${grade} — Your Bo
 // ============================================================
 function getBookIcon(subject) {
   const icons = {
-    math:        "📐",
-    science:     "🔬",
-    english:     "📖",
-    history:     "🏛️",
-    geography:   "🌍",
-    computer:    "💻",
-    hindi:       "📝",
-    marathi:     "📝",
-    social:      "🌐",
-    default:     "📚"
+    math:      "📐",
+    science:   "🔬",
+    english:   "📖",
+    history:   "🏛️",
+    geography: "🌍",
+    computer:  "💻",
+    hindi:     "📝",
+    marathi:   "📝",
+    social:    "🌐",
+    default:   "📚"
   };
   return icons[subject.toLowerCase()] || icons["default"];
 }
@@ -59,14 +58,10 @@ function createBookCard(book) {
     <div class="book-arrow">Tap to learn →</div>
   `;
 
-  // When student clicks the card
   card.onclick = () => {
-    // Save selected book info to localStorage
-    localStorage.setItem("selected_book_id",      book.id);
-    localStorage.setItem("selected_book_subject",  book.subject);
-    localStorage.setItem("selected_book_title",    book.title);
-
-    // Go to chat page
+    localStorage.setItem("selected_book_id",     book.id);
+    localStorage.setItem("selected_book_subject", book.subject);
+    localStorage.setItem("selected_book_title",   book.title);
     window.location.href = "/frontend/chat.html";
   };
 
@@ -80,29 +75,22 @@ async function loadBooks() {
   try {
     const response = await fetch(`${API}/books/${grade}`, {
       method: "GET",
-      headers: {
-        "Authorization": `Bearer ${token}`
-      }
+      headers: { "Authorization": `Bearer ${token}` }
     });
 
     const books = await response.json();
-
-    // Hide loading state
     document.getElementById("loading-state").classList.add("hidden");
 
     if (!response.ok) {
-      // Token expired or other error — go back to login
       window.location.href = "/frontend/index.html";
       return;
     }
 
     if (books.length === 0) {
-      // No books found — show empty state
       document.getElementById("empty-state").classList.remove("hidden");
       return;
     }
 
-    // Add each book card to the grid
     const grid = document.getElementById("books-grid");
     books.forEach(book => {
       const card = createBookCard(book);
@@ -116,7 +104,14 @@ async function loadBooks() {
 }
 
 // ============================================================
-// CONCEPT 7 — Logout
+// GO TO PROGRESS PAGE
+// ============================================================
+function goToProgress() {
+  window.location.href = "/frontend/progress.html";
+}
+
+// ============================================================
+// LOGOUT
 // ============================================================
 function logout() {
   localStorage.clear();
@@ -124,6 +119,6 @@ function logout() {
 }
 
 // ============================================================
-// START — Run loadBooks when page opens
+// START
 // ============================================================
 loadBooks();

@@ -766,3 +766,133 @@ body.login-page {
   color: white;
   border-color: #ef4444;
 }
+
+
+/* ================ PROGRESS PAGE =============================== */
+
+/* My Progress button in navbar */
+.btn-progress {
+  padding: 8px 20px;
+  background: rgba(255,255,255,0.15);
+  color: white;
+  border: 1.5px solid rgba(255,255,255,0.5);
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+
+.btn-progress:hover {
+  background: rgba(255,255,255,0.3);
+  transform: scale(1.05);
+}
+
+/* Progress grid */
+.progress-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 24px;
+  margin-top: 8px;
+}
+
+/* Progress card */
+.progress-card {
+  background: white;
+  border-radius: 16px;
+  padding: 24px 28px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.07);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  border-top: 4px solid #667eea;
+  transition: transform 0.2s;
+}
+
+.progress-card:hover { transform: translateY(-4px); }
+
+/* Card header */
+.progress-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.progress-subject {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #2d2d2d;
+  text-transform: capitalize;
+}
+
+.progress-score-badge {
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 20px;
+}
+
+/* Score row */
+.progress-score-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.progress-score-label {
+  font-size: 0.85rem;
+  color: #888;
+  font-weight: 600;
+}
+
+.progress-score-value {
+  font-size: 1.3rem;
+  font-weight: 800;
+}
+
+/* Progress bar */
+.progress-bar-bg {
+  background: #f3f4f6;
+  border-radius: 20px;
+  height: 10px;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  border-radius: 20px;
+  transition: width 0.8s ease;
+}
+
+/* Meta row */
+.progress-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  color: #9ca3af;
+  font-weight: 600;
+}
+
+/* Weak/suggestion sections */
+.progress-section { display: flex; flex-direction: column; gap: 8px; }
+
+.progress-section-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #555;
+}
+
+.progress-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.tag {
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 20px;
+}
+
+.tag-weak    { background: #fef2f2; color: #ef4444; }
+.tag-suggest { background: #f0fdf4; color: #22c55e; }

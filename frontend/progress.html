@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>EduAI — My Progress</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <!-- TOP NAVIGATION BAR -->
+  <nav class="navbar">
+    <div class="nav-brand">🎓 EduAI</div>
+    <div class="nav-user">
+      <span id="user-greeting">Welcome!</span>
+      <button class="btn-logout" onclick="logout()">Logout</button>
+    </div>
+  </nav>
+
+  <!-- MAIN CONTENT -->
+  <div class="dashboard-container">
+
+    <!-- PAGE TITLE -->
+    <div class="page-title">
+      <button class="btn-back" onclick="goBack()">← Back</button>
+      <h2>📊 My Progress</h2>
+      <p id="progress-subtitle">Here is how you are doing!</p>
+    </div>
+
+    <!-- SUMMARY CARDS -->
+    <div class="stats-bar" id="summary-cards">
+      <div class="stat-card">
+        <div class="stat-icon">📚</div>
+        <div class="stat-info">
+          <div class="stat-number" id="stat-subjects">—</div>
+          <div class="stat-label">Subjects Studied</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">⭐</div>
+        <div class="stat-info">
+          <div class="stat-number" id="stat-avg-score">—</div>
+          <div class="stat-label">Avg Understanding</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">🤔</div>
+        <div class="stat-info">
+          <div class="stat-number" id="stat-doubts">—</div>
+          <div class="stat-label">Total Doubts</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROGRESS CARDS -->
+    <div id="progress-loading" class="loading-state">
+      <p>Loading your progress...</p>
+    </div>
+
+    <div id="progress-grid" class="progress-grid"></div>
+
+    <!-- EMPTY STATE -->
+    <div id="progress-empty" class="empty-state hidden">
+      <p>📖</p>
+      <p>No progress yet!</p>
+      <p>Start learning from your books and your progress will appear here.</p>
+    </div>
+
+  </div>
+
+  <script src="js/progress.js"></script>
+</body>
+</html>
