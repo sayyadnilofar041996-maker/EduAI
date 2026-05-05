@@ -16,8 +16,8 @@ const role  = localStorage.getItem("role");
 // CONCEPT 2 — Protect the page
 // If no token found, send back to login
 // ============================================================
-if (!token) {
-  window.location.href = "index.html";
+if (!token || token === "null" || token === "undefined") {
+  window.location.href = "/frontend/index.html";
 }
 
 // ============================================================
@@ -58,7 +58,6 @@ function createBookCard(book) {
     <div class="book-subject">${book.subject}</div>
     <div class="book-arrow">Tap to learn →</div>
   `;
-  
 
   // When student clicks the card
   card.onclick = () => {
@@ -68,7 +67,7 @@ function createBookCard(book) {
     localStorage.setItem("selected_book_title",    book.title);
 
     // Go to chat page
-    window.location.href = "chat.html";
+    window.location.href = "/frontend/chat.html";
   };
 
   return card;
@@ -93,7 +92,7 @@ async function loadBooks() {
 
     if (!response.ok) {
       // Token expired or other error — go back to login
-      window.location.href = "index.html";
+      window.location.href = "/frontend/index.html";
       return;
     }
 
@@ -121,7 +120,7 @@ async function loadBooks() {
 // ============================================================
 function logout() {
   localStorage.clear();
-  window.location.href = "index.html";
+  window.location.href = "/frontend/index.html";
 }
 
 // ============================================================

@@ -1,10 +1,13 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.security import HTTPBearer
 from backend.database import engine, Base
 from backend.routers import auth, books, chat
-from fastapi.security import HTTPBearer
+from backend.routers import admin              # ✅ NEW
 
 security = HTTPBearer()
+
 # ─────────────────────────────────────────────
 # Create all database tables on startup
 # ─────────────────────────────────────────────
@@ -21,11 +24,10 @@ app = FastAPI(
 
 # ─────────────────────────────────────────────
 # CORS Middleware
-# allows your HTML frontend to talk to this backend
 # ─────────────────────────────────────────────
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],      # in production, replace * with your actual domain
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -37,10 +39,15 @@ app.add_middleware(
 app.include_router(auth.router,  prefix="/auth",  tags=["Auth"])
 app.include_router(books.router, prefix="/books", tags=["Books"])
 app.include_router(chat.router,  prefix="/chat",  tags=["Chat"])
-
+app.include_router(admin.router, prefix="/admin", tags=["Admin"])  # ✅ NEW
 
 # ─────────────────────────────────────────────
-# Root endpoint — just to verify app is running
+# Serve frontend files
+# ─────────────────────────────────────────────
+app.mount("/frontend", StaticFiles(directory="frontend"), name="frontend")
+
+# ─────────────────────────────────────────────
+# Root endpoint
 # ─────────────────────────────────────────────
 @app.get("/")
 def root():

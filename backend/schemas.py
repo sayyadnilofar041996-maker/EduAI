@@ -111,3 +111,15 @@ class ProgressOut(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class ChapterOut(BaseModel):
+    id:            int
+    book_id:       int
+    unit_number:   int
+    unit_name:     str
+    chapter_name:  str
+    chapter_order: int
+
+    class Config:
+        from_attributes = True

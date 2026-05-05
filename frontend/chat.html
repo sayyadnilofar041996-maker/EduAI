@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>EduAI — Chat</title>
+  <link rel="stylesheet" href="css/style.css" />
+
+  <!-- ─── Sidebar styles (added for Step 4) ─────────────────
+       These styles only add NEW sidebar behaviour.
+       They do NOT change any of your existing style.css rules.
+  ──────────────────────────────────────────────────────────── -->
+  <style>
+
+    /* ── Mobile toggle button (hidden on desktop) ─────────── */
+    .sidebar-toggle-btn {
+      display: none;
+      background: none;
+      border: none;
+      font-size: 1.4rem;
+      cursor: pointer;
+      padding: 4px 8px;
+      color: #4f46e5;
+      line-height: 1;
+    }
+
+    /* ── Sidebar base ─────────────────────────────────────── */
+    /* Your .sidebar class already exists in style.css.
+       We only add/override what is needed for the accordion. */
+    .sidebar {
+      overflow-y: auto;
+      transition: transform 0.3s ease;
+    }
+
+    /* ── Chapter <li> wrapper ─────────────────────────────── */
+    .chapter-entry {
+      list-style: none;
+      border-bottom: 1px solid rgba(0,0,0,0.06);
+    }
+
+    /* ── Chapter header row ───────────────────────────────── */
+    .chapter-header-btn {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      background: none;
+      border: none;
+      padding: 12px 14px;
+      cursor: pointer;
+      text-align: left;
+      font-family: inherit;
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: #1e1b4b;
+      transition: background 0.15s;
+      border-radius: 8px;
+    }
+    .chapter-header-btn:hover    { background: #e0e7ff; }
+    .chapter-header-btn.active   { background: #4f46e5; color: #fff; }
+    .chapter-header-btn.active .chapter-arrow { color: #fff; }
+
+    .chapter-num {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 26px; height: 26px;
+      border-radius: 7px;
+      background: rgba(79,70,229,0.12);
+      font-size: 0.75rem;
+      font-weight: 800;
+      color: #4f46e5;
+      flex-shrink: 0;
+    }
+    .chapter-header-btn.active .chapter-num {
+      background: rgba(255,255,255,0.2);
+      color: #fff;
+    }
+
+    .chapter-name-text {
+      flex: 1;
+      line-height: 1.3;
+    }
+
+    .chapter-arrow {
+      font-size: 0.65rem;
+      color: #9ca3af;
+      transition: transform 0.22s ease;
+      flex-shrink: 0;
+    }
+    .chapter-entry.open .chapter-arrow {
+      transform: rotate(90deg);
+    }
+
+    /* ── Subtopics list ───────────────────────────────────── */
+    .subtopics-list {
+      display: none;               /* hidden by default       */
+      list-style: none;
+      padding: 4px 0 8px 48px;    /* indent under chapter num */
+      margin: 0;
+    }
+    .chapter-entry.open .subtopics-list {
+      display: block;              /* shown when chapter open  */
+    }
+
+    /* ── Subtopic item ────────────────────────────────────── */
+    .subtopic-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px 8px 0;
+      cursor: pointer;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: #6b7280;
+      border-radius: 7px;
+      transition: color 0.15s, background 0.15s;
+    }
+    .subtopic-item::before {
+      content: '';
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: #d1d5db;
+      flex-shrink: 0;
+      transition: background 0.15s;
+    }
+    .subtopic-item:hover              { color: #4f46e5; background: #f0f4ff; }
+    .subtopic-item:hover::before      { background: #4f46e5; }
+    .subtopic-item.active-subtopic    { color: #4f46e5; font-weight: 700; }
+    .subtopic-item.active-subtopic::before { background: #f59e0b; }
+
+    /* ── Resume badge next to subtopic ───────────────────── */
+    .resume-tag {
+      font-size: 0.6rem;
+      background: #fef3c7;
+      color: #92400e;
+      border-radius: 4px;
+      padding: 1px 5px;
+      font-weight: 700;
+      letter-spacing: 0.4px;
+      white-space: nowrap;
+    }
+
+    /* ── Sidebar loading / empty states ──────────────────── */
+    .loading-chapters,
+    .empty-chapters {
+      padding: 16px 14px;
+      font-size: 0.82rem;
+      color: #9ca3af;
+      text-align: center;
+      line-height: 1.6;
+      list-style: none;
+    }
+
+    /* ── Breadcrumb in book-info-bar ──────────────────────── */
+    #chapter-crumb {
+      font-size: 0.8rem;
+      color: #6b7280;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 280px;
+    }
+    #chapter-crumb .crumb-chapter { color: #4f46e5; }
+
+    /* ── Mobile sidebar overlay ───────────────────────────── */
+    #sidebar-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.4);
+      z-index: 49;
+    }
+    #sidebar-overlay.show { display: block; }
+
+    /* ── Responsive: sidebar hidden on mobile by default ──── */
+    @media (max-width: 768px) {
+      .sidebar-toggle-btn { display: inline-flex; }
+
+      .sidebar {
+        position: fixed;
+        top: 0; left: 0;
+        height: 100%;
+        width: 270px;
+        z-index: 50;
+        background: #fff;
+        box-shadow: 4px 0 20px rgba(0,0,0,0.12);
+        transform: translateX(-100%);
+      }
+      .sidebar.mobile-open {
+        transform: translateX(0);
+      }
+    }
+
+  </style>
+</head>
+<body>
+
+  <!-- ════════════════════════════════════════════
+       TOP NAVIGATION BAR  (unchanged from yours)
+  ════════════════════════════════════════════ -->
+  <nav class="navbar">
+    <div class="nav-brand">🎓 EduAI</div>
+    <div class="nav-user">
+      <span id="user-greeting">Welcome!</span>
+      <button class="btn-logout" onclick="logout()">Logout</button>
+    </div>
+  </nav>
+
+  <!-- ════════════════════════════════════════════
+       BOOK INFO BAR  (added sidebar toggle + crumb)
+  ════════════════════════════════════════════ -->
+  <div class="book-info-bar">
+
+    <!-- Mobile sidebar toggle (only visible on mobile) -->
+    <button class="sidebar-toggle-btn" onclick="toggleSidebar()" title="Toggle Chapters">☰</button>
+
+    <button class="btn-back" onclick="goBack()">← Back</button>
+
+    <div class="book-info-details">
+      <span id="book-title-display">Loading...</span>
+      <span id="book-subject-display" class="subject-badge"></span>
+    </div>
+
+    <div class="grade-badge">
+      Grade <span id="grade-display"></span>
+    </div>
+
+    <!-- Breadcrumb: shows active chapter › subtopic -->
+    <div id="chapter-crumb"></div>
+
+  </div>
+
+  <!-- Mobile sidebar overlay (tap to close) -->
+  <div id="sidebar-overlay" onclick="closeSidebar()"></div>
+
+  <!-- ════════════════════════════════════════════
+       MAIN LAYOUT  (unchanged wrapper)
+  ════════════════════════════════════════════ -->
+  <div class="main-layout">
+
+    <!-- ════════════════════════════════════════
+         SIDEBAR — Chapters accordion
+    ════════════════════════════════════════ -->
+    <aside class="sidebar" id="sidebar">
+
+      <div class="sidebar-header">
+        <h3>📚 Chapters</h3>
+      </div>
+
+      <!-- Chapter list — filled by JS -->
+      <ul id="chapters-list" class="chapters-list">
+        <li class="loading-chapters">Loading chapters...</li>
+      </ul>
+
+    </aside>
+
+    <!-- ════════════════════════════════════════
+         CHAT AREA  (100% unchanged from yours)
+    ════════════════════════════════════════ -->
+    <div class="chat-wrapper">
+
+      <!-- MESSAGES CONTAINER -->
+      <div id="chat-messages" class="chat-messages">
+
+        <!-- Welcome message -->
+        <div class="message ai-message">
+          <div class="message-avatar">🤖</div>
+          <div class="message-bubble">
+            <p id="welcome-text">Hello! I am your AI teacher.
+            Select a topic from the sidebar or ask me anything from your textbook!</p>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- TYPING INDICATOR -->
+      <div id="typing-indicator" class="typing-indicator hidden">
+        <div class="message-avatar">🤖</div>
+        <div class="typing-bubble">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+      </div>
+
+      <!-- INPUT AREA -->
+      <div class="chat-input-area">
+        <div class="input-wrapper">
+
+          <!-- Language selector -->
+          <select id="lang-select" class="lang-select">
+            <option value="english">🇬🇧 EN</option>
+            <option value="hindi">🇮🇳 HI</option>
+            <option value="marathi">🟠 MR</option>
+          </select>
+
+          <!-- Text input -->
+          <input
+            type="text"
+            id="question-input"
+            class="question-input"
+            placeholder="Ask your teacher anything..."
+            onkeydown="handleKeyPress(event)"
+          />
+
+          <!-- Send button -->
+          <button type="button" class="btn-send" onclick="sendQuestion()" id="send-btn">
+            ➤
+          </button>
+
+        </div>
+      </div>
+
+    </div><!-- end .chat-wrapper -->
+  </div><!-- end .main-layout -->
+
+  <!-- ════════════════════════════════════════════════════════
+       chat.js — your existing file (no changes needed there)
+  ════════════════════════════════════════════════════════ -->
+  <script src="js/chat.js"></script>
+
+  <!-- ════════════════════════════════════════════════════════
+       SIDEBAR JAVASCRIPT
+       All new sidebar logic lives here, separate from chat.js
+       so you don't break anything already working.
+  ════════════════════════════════════════════════════════ -->
+  <script>
+  /* ─────────────────────────────────────────────────────────
+     SIDEBAR STATE
+     We store which chapter and subtopic are currently active
+     so chat.js can read them when building the /chat/ask body.
+  ───────────────────────────────────────────────────────── */
+  window.sidebarState = {
+    activeChapterName:  null,   // e.g.  "Light"
+    activeSubtopicName: null,   // e.g.  "Reflection of Light"
+  };
+
+  /* ─────────────────────────────────────────────────────────
+     loadChapters()
+     Called after chat.js has set window.currentBookId.
+     Fetches GET /books/{book_id}/chapters and builds the list.
+  ───────────────────────────────────────────────────────── */
+  async function loadChapters() {
+    const bookId = window.currentBookId;
+    const token  = localStorage.getItem('token');
+    const list   = document.getElementById('chapters-list');
+
+    if (!bookId) {
+      list.innerHTML = '<li class="empty-chapters">No book selected.</li>';
+      return;
+    }
+
+    list.innerHTML = '<li class="loading-chapters">Loading chapters...</li>';
+
+    try {
+      const res = await fetch(`/books/${bookId}/chapters`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (!res.ok) throw new Error('fetch failed');
+
+      const data = await res.json();
+      // API returns either { chapters: [...] } or directly [...]
+      const chapters = data.chapters || data || [];
+
+      if (!chapters.length) {
+        list.innerHTML = '<li class="empty-chapters">No chapters found.<br>Ask freely — I will teach you! 📖</li>';
+        return;
+      }
+
+      buildChapterList(chapters);
+
+    } catch (err) {
+      console.error('loadChapters error:', err);
+      list.innerHTML = '<li class="empty-chapters">Could not load chapters.<br>You can still ask questions below!</li>';
+    }
+  }
+
+  /* ─────────────────────────────────────────────────────────
+     buildChapterList(chapters)
+
+     Your book_chapters table has:
+       unit_number, unit_name, chapter_name, chapter_order
+
+     Strategy:
+       • Group rows by unit_number
+       • First row of each unit  → chapter header
+       • Remaining rows          → subtopics (accordion children)
+       • If only 1 row per unit  → no subtopics, chapter is clickable directly
+  ───────────────────────────────────────────────────────── */
+  function buildChapterList(chapters) {
+    const list = document.getElementById('chapters-list');
+    list.innerHTML = '';
+
+    // ── Group by unit_number ──
+    const unitMap = {};
+    chapters.forEach(row => {
+      const key = row.unit_number ?? row.chapter_order ?? 0;
+      if (!unitMap[key]) unitMap[key] = [];
+      unitMap[key].push(row);
+    });
+
+    let idx = 0;
+    Object.keys(unitMap).forEach(unitKey => {
+      idx++;
+      const rows        = unitMap[unitKey];
+      const chapterName = rows[0].chapter_name || rows[0].unit_name || `Chapter ${idx}`;
+      const subtopics   = rows.length > 1 ? rows.slice(1) : [];
+
+      /* ── Build <li class="chapter-entry"> ── */
+      const li = document.createElement('li');
+      li.className     = 'chapter-entry';
+      li.dataset.unit  = unitKey;
+
+      /* Chapter header button */
+      const btn = document.createElement('button');
+      btn.className = 'chapter-header-btn';
+      btn.innerHTML = `
+        <span class="chapter-num">${idx}</span>
+        <span class="chapter-name-text">${escHtml(chapterName)}</span>
+        ${subtopics.length ? '<span class="chapter-arrow">▶</span>' : ''}
+      `;
+
+      /* Click on chapter header */
+      btn.addEventListener('click', () => {
+        onChapterClick(li, btn, chapterName, subtopics);
+      });
+
+      li.appendChild(btn);
+
+      /* ── Subtopics list (hidden by default) ── */
+      if (subtopics.length) {
+        const subUl = document.createElement('ul');
+        subUl.className = 'subtopics-list';
+
+        subtopics.forEach(sub => {
+          const subName = sub.chapter_name;
+          const subLi   = document.createElement('li');
+          subLi.className   = 'subtopic-item';
+          subLi.textContent = subName;
+          // Resume tag will be added by onSubtopicClick if it was last active
+          subLi.addEventListener('click', () => {
+            onSubtopicClick(subLi, subName, chapterName);
+          });
+          subUl.appendChild(subLi);
+        });
+
+        li.appendChild(subUl);
+      }
+
+      list.appendChild(li);
+    });
+  }
+
+  /* ─────────────────────────────────────────────────────────
+     onChapterClick(li, btn, chapterName, subtopics)
+     • Toggles accordion open/close
+     • If NO subtopics → pre-fills question input directly
+     • If HAS subtopics → just opens accordion, waits for subtopic click
+  ───────────────────────────────────────────────────────── */
+  function onChapterClick(li, btn, chapterName, subtopics) {
+    const isOpen = li.classList.contains('open');
+
+    // Close all other open chapters
+    document.querySelectorAll('.chapter-entry.open').forEach(entry => {
+      entry.classList.remove('open');
+      entry.querySelector('.chapter-header-btn')?.classList.remove('active');
+    });
+
+    if (isOpen) {
+      // Toggle closed — clear active state
+      window.sidebarState.activeChapterName  = null;
+      window.sidebarState.activeSubtopicName = null;
+      updateCrumb(null, null);
+      return;
+    }
+
+    // Open this chapter
+    li.classList.add('open');
+    btn.classList.add('active');
+    window.sidebarState.activeChapterName  = chapterName;
+    window.sidebarState.activeSubtopicName = null;
+
+    updateCrumb(chapterName, null);
+
+    // No subtopics → pre-fill input so student can continue/start
+    if (!subtopics.length) {
+      prefillInput(`Please teach me "${chapterName}" — continue from where we left off.`);
+      closeSidebar(); // close on mobile
+    }
+    // Has subtopics → accordion opens, student picks subtopic next
+  }
+
+  /* ─────────────────────────────────────────────────────────
+     onSubtopicClick(subLi, subtopicName, chapterName)
+     • Marks subtopic as active
+     • Updates breadcrumb
+     • Pre-fills input: "continue from where we left off"
+  ───────────────────────────────────────────────────────── */
+  function onSubtopicClick(subLi, subtopicName, chapterName) {
+    // Clear all active subtopics
+    document.querySelectorAll('.subtopic-item.active-subtopic').forEach(el => {
+      el.classList.remove('active-subtopic');
+      el.querySelector('.resume-tag')?.remove();
+    });
+
+    // Mark this one active + add resume tag
+    subLi.classList.add('active-subtopic');
+    const tag = document.createElement('span');
+    tag.className   = 'resume-tag';
+    tag.textContent = 'Resume';
+    subLi.appendChild(tag);
+
+    // Update state — chat.js can read this
+    window.sidebarState.activeChapterName  = chapterName;
+    window.sidebarState.activeSubtopicName = subtopicName;
+
+    updateCrumb(chapterName, subtopicName);
+
+    // Pre-fill the question input
+    prefillInput(`Please continue teaching me "${subtopicName}" — start exactly from where we left off.`);
+
+    closeSidebar(); // close sidebar on mobile
+  }
+
+  /* ─────────────────────────────────────────────────────────
+     updateCrumb(chapter, subtopic)
+     Shows  Chapter Name › Subtopic Name  in the book-info-bar
+  ───────────────────────────────────────────────────────── */
+  function updateCrumb(chapter, subtopic) {
+    const crumb = document.getElementById('chapter-crumb');
+    if (!chapter) { crumb.innerHTML = ''; return; }
+    if (subtopic) {
+      crumb.innerHTML =
+        `<span class="crumb-chapter">${escHtml(chapter)}</span> › ${escHtml(subtopic)}`;
+    } else {
+      crumb.innerHTML =
+        `<span class="crumb-chapter">${escHtml(chapter)}</span>`;
+    }
+  }
+
+  /* ─────────────────────────────────────────────────────────
+     prefillInput(text)
+     Puts text into the question input and focuses it
+     so student can press Enter or edit before sending.
+  ───────────────────────────────────────────────────────── */
+  function prefillInput(text) {
+    const input = document.getElementById('question-input');
+    if (!input) return;
+    input.value = text;
+    input.focus();
+  }
+
+  /* ─────────────────────────────────────────────────────────
+     MOBILE SIDEBAR TOGGLE
+  ───────────────────────────────────────────────────────── */
+  function toggleSidebar() {
+    const sidebar  = document.getElementById('sidebar');
+    const overlay  = document.getElementById('sidebar-overlay');
+    const isOpen   = sidebar.classList.contains('mobile-open');
+    if (isOpen) {
+      sidebar.classList.remove('mobile-open');
+      overlay.classList.remove('show');
+    } else {
+      sidebar.classList.add('mobile-open');
+      overlay.classList.add('show');
+    }
+  }
+
+  function closeSidebar() {
+    document.getElementById('sidebar').classList.remove('mobile-open');
+    document.getElementById('sidebar-overlay').classList.remove('show');
+  }
+
+  /* ─────────────────────────────────────────────────────────
+     escHtml — prevent XSS in chapter names
+  ───────────────────────────────────────────────────────── */
+  function escHtml(str) {
+    if (!str) return '';
+    return str
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  /* ─────────────────────────────────────────────────────────
+     INIT SIDEBAR
+     We wait for chat.js to finish its init (it sets
+     window.currentBookId). We poll briefly to be safe.
+  ───────────────────────────────────────────────────────── */
+  function initSidebar() {
+    if (window.currentBookId) {
+      loadChapters();
+    } else {
+      // chat.js may still be running its init — wait a moment
+      setTimeout(() => loadChapters(), 600);
+    }
+  }
+
+  // Run after page load
+  window.addEventListener('load', initSidebar);
+
+  </script>
+
+</body>
+</html>

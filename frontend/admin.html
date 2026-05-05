@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>EduAI — Admin</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <!-- TOP NAVIGATION BAR -->
+  <nav class="navbar">
+    <div class="nav-brand">🎓 EduAI — Admin</div>
+    <div class="nav-user">
+      <span id="user-greeting">Welcome, Admin!</span>
+      <button class="btn-logout" onclick="logout()">Logout</button>
+    </div>
+  </nav>
+
+  <!-- MAIN CONTENT -->
+  <div class="dashboard-container">
+
+    <!-- ── STATS BAR ── -->
+    <div class="stats-bar">
+      <div class="stat-card">
+        <div class="stat-icon">📚</div>
+        <div class="stat-info">
+          <div class="stat-number" id="stat-books">—</div>
+          <div class="stat-label">Total Books</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">🎓</div>
+        <div class="stat-info">
+          <div class="stat-number" id="stat-students">—</div>
+          <div class="stat-label">Total Students</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">💬</div>
+        <div class="stat-info">
+          <div class="stat-number" id="stat-chats">—</div>
+          <div class="stat-label">Total Chats</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── UPLOAD SECTION ── -->
+    <div class="admin-section">
+      <h2 class="section-title">📤 Upload New Book</h2>
+
+      <div class="upload-form">
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Book Title</label>
+            <input type="text" id="book-title" placeholder="e.g. Science Textbook" />
+          </div>
+          <div class="form-group">
+            <label>Subject</label>
+            <input type="text" id="book-subject" placeholder="e.g. Science" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Grade</label>
+            <select id="book-grade">
+              <option value="">Select Grade</option>
+              <option value="1">Grade 1</option>
+              <option value="2">Grade 2</option>
+              <option value="3">Grade 3</option>
+              <option value="4">Grade 4</option>
+              <option value="5">Grade 5</option>
+              <option value="6">Grade 6</option>
+              <option value="7">Grade 7</option>
+              <option value="8">Grade 8</option>
+              <option value="9">Grade 9</option>
+              <option value="10">Grade 10</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>PDF File</label>
+            <input type="file" id="book-file" accept=".pdf" />
+          </div>
+        </div>
+
+        <div id="upload-msg" class="msg"></div>
+
+        <button class="btn-upload" onclick="uploadBook()" id="upload-btn">
+          📤 Upload Book
+        </button>
+
+      </div>
+    </div>
+
+    <!-- ── BOOKS TABLE ── -->
+    <div class="admin-section">
+      <h2 class="section-title">📚 All Books</h2>
+      <div id="books-loading" class="loading-state"><p>Loading books...</p></div>
+      <table class="admin-table" id="books-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Title</th>
+            <th>Subject</th>
+            <th>Grade</th>
+            <th>Uploaded</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="books-tbody">
+        </tbody>
+      </table>
+      <div id="books-empty" class="empty-state hidden">
+        <p>😔 No books uploaded yet.</p>
+      </div>
+    </div>
+
+    <!-- ── STUDENTS TABLE ── -->
+    <div class="admin-section">
+      <h2 class="section-title">🎓 All Students</h2>
+      <div id="students-loading" class="loading-state"><p>Loading students...</p></div>
+      <table class="admin-table" id="students-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Grade</th>
+            <th>Language</th>
+          </tr>
+        </thead>
+        <tbody id="students-tbody">
+        </tbody>
+      </table>
+      <div id="students-empty" class="empty-state hidden">
+        <p>😔 No students registered yet.</p>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="js/admin.js"></script>
+</body>
+</html>

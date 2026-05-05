@@ -39,9 +39,6 @@ async function loginUser() {
     return;
   }
 
-  // ❌ DELETE these 3 lines (FormData) — already removed
-  // ✅ directly use fetch with JSON below
-
   try {
     const response = await fetch(`${API}/auth/login`, {
       method: "POST",
@@ -50,13 +47,13 @@ async function loginUser() {
     });
 
     const data = await response.json();
-    console.log(data);   // temporary debug line
 
     if (!response.ok) {
       showMsg("login-msg", data.detail || "Login failed.", "error");
       return;
     }
 
+    // Save to localStorage first
     localStorage.setItem("token", data.access_token);
     localStorage.setItem("role",  data.role);
     localStorage.setItem("grade", data.grade);
@@ -64,13 +61,12 @@ async function loginUser() {
 
     showMsg("login-msg", "Login successful! Redirecting...", "success");
 
-    setTimeout(() => {
-      if (data.role === "admin") {
-        window.location.href = "admin.html";
-      } else {
-        window.location.href = "dashboard.html";
-      }
-    }, 1000);
+    // Redirect immediately — no setTimeout
+    if (data.role === "admin") {
+      window.location.href = "/frontend/admin.html";
+    } else {
+      window.location.href = "/frontend/dashboard.html";
+    }
 
   } catch (err) {
     showMsg("login-msg", "Cannot connect to server. Is FastAPI running?", "error");

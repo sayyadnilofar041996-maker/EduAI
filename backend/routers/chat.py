@@ -66,7 +66,8 @@ def ask_question(
         book_id           = book.id,
         grade             = current_user.grade,
         language          = request.language,
-        explanation_style = explanation_style
+        explanation_style = explanation_style,
+        subject           = request.subject
     )
 
     ai_answer   = result["answer"]

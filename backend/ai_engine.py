@@ -14,36 +14,27 @@ client = Groq(api_key=GROQ_API_KEY)
 
 VECTORSTORE_DIR = "vectorstore"
 
-# Embedding model — converts text to vectors
 embeddings = SentenceTransformerEmbeddings(
     model_name="all-MiniLM-L6-v2"
 )
 
 # ============================================================
-# STEP 1 — INDEX PDF (called when admin uploads a book)
+# STEP 1 — INDEX PDF
 # ============================================================
 
 def index_pdf(pdf_path: str, book_id: int):
-    """
-    Reads PDF, splits into chunks, stores in ChromaDB.
-    Called once when admin uploads a PDF.
-    """
-
-    # 1. Extract full text from PDF using PyMuPDF
     doc = fitz.open(pdf_path)
     full_text = ""
     for page in doc:
         full_text += page.get_text()
     doc.close()
 
-    # 2. Split text into small chunks
     splitter = RecursiveCharacterTextSplitter(
         chunk_size=500,
         chunk_overlap=50
     )
     chunks = splitter.split_text(full_text)
 
-    # 3. Store chunks in ChromaDB
     collection_name = f"book_{book_id}"
     vectorstore = Chroma.from_texts(
         texts=chunks,
@@ -57,15 +48,10 @@ def index_pdf(pdf_path: str, book_id: int):
 
 
 # ============================================================
-# STEP 2 — RETRIEVE RELEVANT CHUNKS (called when student asks)
+# STEP 2 — RETRIEVE RELEVANT CHUNKS
 # ============================================================
 
 def get_relevant_chunks(question: str, book_id: int) -> str:
-    """
-    Searches ChromaDB for chunks most relevant to the question.
-    Returns them as a single string.
-    """
-
     collection_name = f"book_{book_id}"
 
     vectorstore = Chroma(
@@ -74,10 +60,7 @@ def get_relevant_chunks(question: str, book_id: int) -> str:
         persist_directory=VECTORSTORE_DIR
     )
 
-    # Find top 4 most relevant chunks
     results = vectorstore.similarity_search(question, k=4)
-
-    # Join all chunks into one string
     context = "\n\n".join([doc.page_content for doc in results])
 
     return context
@@ -88,9 +71,6 @@ def get_relevant_chunks(question: str, book_id: int) -> str:
 # ============================================================
 
 def detect_doubt(question: str) -> bool:
-    """
-    Returns True if student is confused.
-    """
     doubt_phrases = [
         "didn't understand", "did not understand",
         "not understand", "confused", "samajh nahi aaya",
@@ -106,19 +86,46 @@ def detect_doubt(question: str) -> bool:
 # STEP 4 — BUILD SYSTEM PROMPT
 # ============================================================
 
-def build_system_prompt(grade: int, language: str,
-                         doubt: bool, style: str) -> str:
-    """
-    Builds dynamic system prompt based on student profile.
-    """
+def build_system_prompt(
+    grade: int,
+    language: str,
+    doubt: bool,
+    style: str,
+    subject: str = "your subject"
+) -> str:
 
     # Grade based tone
-    if grade <= 3:
-        tone = "Use very simple words. Short sentences. Like talking to a 6 year old. Use emojis."
+    if grade <= 4:
+        tone = f"""
+You are teaching a very young child in Grade {grade}.
+ALWAYS use one of these styles:
+- Tell a fun story to explain the topic
+- Use simple real life examples (toys, food, animals, family)
+- Draw simple text diagrams like:
+    🌱 Seed → 💧 Water + ☀️ Sunlight → 🌿 Plant grows!
+- Use LOTS of emojis to make it fun
+- Very short sentences. One idea at a time.
+- Never use difficult words. If you must, explain it immediately.
+- Always end with a fun question like "Can you tell me one thing you learned? 😊"
+"""
     elif grade <= 6:
-        tone = "Use simple language. Give real life examples. Be friendly and encouraging."
+        tone = f"""
+You are teaching a middle school student in Grade {grade}.
+- Use simple language with real life examples
+- Add short text diagrams when helpful
+- Be friendly, warm and encouraging
+- Give one example from daily life for every concept
+- End with a small question or exercise
+"""
     else:
-        tone = "Use proper academic language. Give detailed explanations. Include formulas if needed."
+        tone = f"""
+You are teaching a senior school student in Grade {grade}.
+- Use proper academic language
+- Give detailed step by step explanations
+- Include formulas, definitions and diagrams where needed
+- Challenge the student with follow up questions
+- Be encouraging but academic in tone
+"""
 
     # Language
     if language == "hindi":
@@ -133,36 +140,77 @@ def build_system_prompt(grade: int, language: str,
         style_instruction = """
 The student did not understand the previous explanation.
 Change your explanation style COMPLETELY.
-Use a story, a real life example, or a simple analogy.
-Break it into very small steps.
-Ask the student questions to check understanding.
+- Use a story or fun analogy this time
+- Break into very tiny baby steps
+- Use emojis and simple diagrams
+- Ask the student questions to check understanding
 """
     else:
         style_instruction = """
-Teach step by step.
-After explaining, give a small exercise or question.
-Encourage the student.
+- Teach step by step clearly
+- After explaining, give a small exercise or question
+- Be warm and encouraging throughout
 """
 
     prompt = f"""
-You are EduAI — a friendly AI teacher for school students.
+You are EduAI — a friendly, fun and caring AI teacher for school students.
 You are teaching a Grade {grade} student.
+The student's selected subject is: {subject}
 
 {lang_instruction}
 {tone}
 {style_instruction}
 
-Use ONLY the textbook content provided to you.
-Do not add information from outside the textbook.
-If the answer is not in the textbook content, say:
-"This topic is not covered in your current textbook."
+TEACHING INSTRUCTIONS:
+1. First use the textbook content provided to explain the topic.
+2. If the textbook content is incomplete, add your own knowledge to make the explanation full and clear.
+3. If the textbook has no diagram or analogy, create one yourself using simple text diagrams and emojis.
+4. Always make the student fully understand — textbook first, then supplement with extra knowledge.
+5. Never say "this is not in your textbook" — always teach completely.
+6. If the student is just greeting (hi, hello) — respond warmly and ask what they want to learn in {subject} today.
+
+SUBJECT BOUNDARY INSTRUCTIONS:
+7. The student has selected the subject: {subject}.
+   If the student asks about a COMPLETELY DIFFERENT subject
+   (example: asks about Science when they selected Math),
+   respond politely like this:
+   "I am your {subject} teacher today! 😊 I can only help you with {subject} topics.
+   For other subjects, please go back to the dashboard and select that book.
+   Now shall we continue with {subject}? 📚"
+   Always redirect gently and kindly.
+8. If the question is loosely related to {subject} — answer briefly
+   and bring focus back to the textbook topic.
+
+MOTIVATION INSTRUCTIONS — VERY IMPORTANT:
+9. If the student answers a question CORRECTLY — celebrate enthusiastically!
+   Use different messages each time:
+   - "🌟 Excellent! You got it right! You are so smart!"
+   - "🎉 Wow! Perfect answer! I am so proud of you!"
+   - "⭐ Amazing! You remembered that so well!"
+   - "🏆 Champion! That is 100% correct!"
+10. If the student answers PARTIALLY correct — encourage and guide:
+    - "Good try! You got part of it right! Let me help with the rest..."
+11. If the student answers INCORRECTLY — be gentle and kind:
+    - "Good effort! Let's try again together..."
+    - Never make the student feel bad or stupid.
+
+DIAGRAM STYLE — use simple text art like:
+   ☀️ Sunlight
+      ↓
+   🌿 Leaf absorbs light
+      ↓
+   💧 Water + CO2
+      ↓
+   🍬 Glucose (food) + O2 released
+
+Always make learning FUN, SAFE and ENCOURAGING! 🎓
 """
 
     return prompt
 
 
 # ============================================================
-# STEP 5 — MAIN AI FUNCTION (called from chat.py)
+# STEP 5 — MAIN AI FUNCTION
 # ============================================================
 
 def get_ai_response(
@@ -170,14 +218,11 @@ def get_ai_response(
     book_id: int,
     grade: int,
     language: str = "english",
-    explanation_style: str = "normal"
+    explanation_style: str = "normal",
+    subject: str = "your subject"
 ) -> dict:
-    """
-    Main function called by chat.py
-    Returns AI answer + doubt status + style used
-    """
 
-    # Detect if student is confused
+    # Detect doubt
     doubt = detect_doubt(question)
     style = "story" if doubt else explanation_style
 
@@ -185,9 +230,15 @@ def get_ai_response(
     context = get_relevant_chunks(question, book_id)
 
     # Build system prompt
-    system_prompt = build_system_prompt(grade, language, doubt, style)
+    system_prompt = build_system_prompt(
+        grade=grade,
+        language=language,
+        doubt=doubt,
+        style=style,
+        subject=subject
+    )
 
-    # Build final message to Groq
+    # Build user message
     user_message = f"""
 Textbook Content:
 {context}
@@ -209,8 +260,197 @@ Student Question:
     answer = response.choices[0].message.content
 
     return {
-        "answer": answer,
-        "doubt_detected": doubt,
+        "answer":           answer,
+        "doubt_detected":   doubt,
         "explanation_style": style,
-        "chunks_used": len(context)
+        "chunks_used":      len(context)
     }
+
+
+# ============================================================
+# STEP 6 — EXTRACT CHAPTERS FROM PDF — 3 LAYER SYSTEM
+# ============================================================
+
+def extract_chapters_from_pdf(pdf_path: str, book_id: int) -> list:
+    print(f"📖 Extracting chapters from: {pdf_path}")
+
+    # LAYER 1 — PyMuPDF built-in TOC
+    try:
+        doc = fitz.open(pdf_path)
+        toc = doc.get_toc()
+        doc.close()
+
+        if toc and len(toc) > 2:
+            print("✅ Layer 1 — TOC found in PDF")
+            return _parse_toc(toc)
+
+    except Exception as e:
+        print(f"⚠️ Layer 1 failed: {e}")
+
+    # LAYER 2 — Scan first 10 pages for patterns
+    try:
+        doc = fitz.open(pdf_path)
+        scan_text = ""
+        for i in range(min(10, len(doc))):
+            scan_text += doc[i].get_text()
+        doc.close()
+
+        result = _parse_text_patterns(scan_text)
+        if result and len(result) > 2:
+            print("✅ Layer 2 — Pattern found in first 10 pages")
+            return result
+
+    except Exception as e:
+        print(f"⚠️ Layer 2 failed: {e}")
+
+    # LAYER 3 — Groq AI reads the index page
+    try:
+        doc = fitz.open(pdf_path)
+        index_text = ""
+        for i in range(min(8, len(doc))):
+            index_text += f"\n--- Page {i+1} ---\n"
+            index_text += doc[i].get_text()
+        doc.close()
+
+        result = _extract_with_groq(index_text)
+        if result:
+            print("✅ Layer 3 — Groq AI extracted chapters")
+            return result
+
+    except Exception as e:
+        print(f"⚠️ Layer 3 failed: {e}")
+
+    # ALL LAYERS FAILED
+    print("❌ No chapters found — student can ask freely")
+    return []
+
+
+# ============================================================
+# LAYER 1 HELPER — Parse PyMuPDF TOC
+# ============================================================
+
+def _parse_toc(toc: list) -> list:
+    chapters = []
+    current_unit_number = 0
+    current_unit_name = "Unit 1"
+    chapter_order = 0
+
+    for item in toc:
+        level, title, page = item
+
+        if level == 1:
+            current_unit_number += 1
+            current_unit_name = title
+            chapter_order = 0
+
+        elif level == 2:
+            chapter_order += 1
+            chapters.append({
+                "unit_number":   current_unit_number,
+                "unit_name":     current_unit_name,
+                "chapter_name":  title,
+                "chapter_order": chapter_order
+            })
+
+    return chapters
+
+
+# ============================================================
+# LAYER 2 HELPER — Parse text patterns
+# ============================================================
+
+def _parse_text_patterns(text: str) -> list:
+    import re
+
+    chapters = []
+    lines = text.split('\n')
+    lines = [l.strip() for l in lines if l.strip()]
+
+    current_unit_number = 0
+    current_unit_name = ""
+    chapter_order = 0
+
+    word_to_num = {
+        "one": 1, "two": 2, "three": 3, "four": 4,
+        "five": 5, "six": 6, "seven": 7, "eight": 8,
+        "nine": 9, "ten": 10
+    }
+
+    unit_pattern = re.compile(
+        r'^(unit|chapter|section)\s+(\w+)$',
+        re.IGNORECASE
+    )
+
+    for line in lines:
+        match = unit_pattern.match(line)
+        if match:
+            num_word = match.group(2).lower()
+            current_unit_number = word_to_num.get(
+                num_word,
+                current_unit_number + 1
+            )
+            current_unit_name = line.title()
+            chapter_order = 0
+
+        elif current_unit_name and len(line) > 3 and len(line) < 60:
+            if not line.isdigit():
+                chapter_order += 1
+                chapters.append({
+                    "unit_number":   current_unit_number,
+                    "unit_name":     current_unit_name,
+                    "chapter_name":  line,
+                    "chapter_order": chapter_order
+                })
+
+    return chapters
+
+
+# ============================================================
+# LAYER 3 HELPER — Groq AI extraction
+# ============================================================
+
+def _extract_with_groq(index_text: str) -> list:
+    import json
+
+    prompt = """
+You are a textbook parser.
+Look at this textbook index/contents page text.
+Extract all units and their chapters/lessons.
+
+Return ONLY a JSON array like this — no explanation, no extra text:
+[
+    {
+        "unit_number": 1,
+        "unit_name": "Unit One",
+        "chapter_name": "A Happy Song",
+        "chapter_order": 1
+    },
+    {
+        "unit_number": 1,
+        "unit_name": "Unit One",
+        "chapter_name": "Nature",
+        "chapter_order": 2
+    }
+]
+
+Rules:
+- If there are no units, use unit_number=1 and unit_name="Chapters"
+- Each individual lesson or topic = one chapter entry
+- Keep chapter names exactly as they appear in the text
+- Return ONLY the JSON array, nothing else
+"""
+
+    response = client.chat.completions.create(
+        model="llama-3.3-70b-versatile",
+        messages=[
+            {"role": "system", "content": prompt},
+            {"role": "user",   "content": f"Textbook index text:\n{index_text}"}
+        ],
+        max_tokens=2000
+    )
+
+    raw = response.choices[0].message.content.strip()
+    raw = raw.replace("```json", "").replace("```", "").strip()
+
+    chapters = json.loads(raw)
+    return chapters
